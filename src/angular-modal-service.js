@@ -23,22 +23,26 @@
       //  Returns a promise which gets the template, either
       //  from the template parameter or via a request to the 
       //  template url parameter.
-      var getTemplate = function(template, templateUrl) {
+      var getTemplate = function(template, templateUrl, cache) {
+        
         var deferred = $q.defer();
         if(template) {
           deferred.resolve(template);
         } else if(templateUrl) {
           // check to see if the template has already been loaded
           var cachedTemplate = $templateCache.get(templateUrl);
-          if(cachedTemplate !== undefined) {
+
+          if(cachedTemplate !== undefined && cache) {
             deferred.resolve(cachedTemplate);
           }
           // if not, let's grab the template for the first time
           else {
-            $http({method: 'GET', url: templateUrl, cache: true})
+            $http({method: 'GET', url: templateUrl, cache: cache})
               .then(function(result) {
-                // save template into the cache and return the template
-                $templateCache.put(templateUrl, result.data);
+                // if cache iguals true, save template into the cache and return the template
+                if(cache) { 
+                  $templateCache.put(templateUrl, result.data);
+                }
                 deferred.resolve(result.data);
               })
               .catch(function(error) {
@@ -64,7 +68,7 @@
         }
 
         //  Get the actual html of the template.
-        getTemplate(options.template, options.templateUrl)
+        getTemplate(options.template, options.templateUrl, options.cache)
           .then(function(template) {
 
             //  Create a new scope for the modal.
